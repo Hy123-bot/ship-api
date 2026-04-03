@@ -1,6 +1,10 @@
 # 构建阶段 - 使用更轻量的镜像
-# v2: 强制 Railway 重新构建
+# v3: 清除缓存强制重新构建 (2026-04-04)
 FROM node:20-alpine AS builder
+
+# 添加 ARG 来破坏缓存
+ARG CACHE_BUST=1
+RUN echo "Cache bust: $CACHE_BUST"
 
 WORKDIR /app
 
