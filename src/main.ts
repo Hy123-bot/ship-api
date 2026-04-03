@@ -4,6 +4,16 @@ import * as express from 'express';
 import { HttpStatusInterceptor } from '@/interceptors/http-status.interceptor';
 
 function parsePort(): number {
+  // 1. 优先读取 Railway 环境变量 PORT
+  const envPort = process.env.PORT;
+  if (envPort) {
+    const port = parseInt(envPort, 10);
+    if (!isNaN(port) && port > 0 && port < 65536) {
+      return port;
+    }
+  }
+
+  // 2. 检查命令行参数 -p
   const args = process.argv.slice(2);
   const portIndex = args.indexOf('-p');
   if (portIndex !== -1 && args[portIndex + 1]) {
@@ -12,6 +22,8 @@ function parsePort(): number {
       return port;
     }
   }
+
+  // 3. 默认端口
   return 3000;
 }
 
