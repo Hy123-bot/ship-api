@@ -1,4 +1,5 @@
 # 构建阶段 - 使用更轻量的镜像
+# v2: 强制 Railway 重新构建
 FROM node:20-alpine AS builder
 
 WORKDIR /app
