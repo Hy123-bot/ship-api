@@ -6,10 +6,10 @@ WORKDIR /app
 # 复制 package.json
 COPY package.json ./
 
-# 安装所有依赖（包括 devDependencies）
+# 安装所有依赖（包括 devDependencies，用于编译）
 RUN npm install --no-fund --no-audit
 
-# 复制源代码
+# 复制源代码和配置文件
 COPY . .
 
 # 编译 TypeScript
