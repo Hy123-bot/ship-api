@@ -1,9 +1,9 @@
 # 构建阶段 - 使用更轻量的镜像
-# v3: 清除缓存强制重新构建 (2026-04-04)
+# v4: 监听 0.0.0.0 接受外部请求
 FROM node:20-alpine AS builder
 
 # 添加 ARG 来破坏缓存
-ARG CACHE_BUST=1
+ARG CACHE_BUST=2026-04-04-v4
 RUN echo "Cache bust: $CACHE_BUST"
 
 WORKDIR /app
