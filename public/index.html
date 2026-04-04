@@ -442,7 +442,7 @@
                     <div class="river-tab" data-river="estuary">近海河口</div>
                 </div>
                 <div class="river-card">
-                    <img id="riverImg" src="https://picui.ogmua.cn/s1/2026/03/27/69c6a31114750.webp" alt="河流环境">
+                    <img id="riverImg" src="/river-images/lake.jpg" alt="河流环境">
                     <div class="info">
                         <h3 id="riverName">宽阔江面</h3>
                         <p id="riverDesc">水面宽阔，风浪较大，周边景点，远处有大桥。</p>
@@ -620,31 +620,31 @@
         let API_BASE = '';
         let isOnline = false;
         
-        // 河流数据
+        // 河流数据 - 使用 JPG 格式，本地静态文件
         const RIVERS = {
             mountain: {
                 name: '山间激流',
-                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a2c0044dd.webp',
+                img: '/river-images/mountain.jpg',
                 desc: '峡谷之间，水流湍急，暗礁密布，河道狭窄且落差大。'
             },
             canal: {
                 name: '城市运河',
-                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a2fab7ac6.webp',
+                img: '/river-images/canal.jpg',
                 desc: '城市运河，两岸景区步道，行人众多，水面平静。'
             },
             lake: {
                 name: '宽阔江面',
-                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a31114750.webp',
+                img: '/river-images/lake.jpg',
                 desc: '水面宽阔，风浪较大，周边景点，远处有大桥。'
             },
             wetland: {
                 name: '湿地浅滩',
-                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a3217dc40.webp',
+                img: '/river-images/wetland.jpg',
                 desc: '芦苇丛生，候鸟栖息，水浅（<0.5m），生态敏感。'
             },
             estuary: {
                 name: '近海河口',
-                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a32852438.webp',
+                img: '/river-images/estuary.jpg',
                 desc: '咸淡水交汇，潮汐影响大，风浪混合，腐蚀性强。'
             }
         };
