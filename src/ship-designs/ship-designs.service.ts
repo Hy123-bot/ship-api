@@ -1,7 +1,6 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import { S3Storage } from 'coze-coding-dev-sdk';
-import { LLMClient, Config } from 'coze-coding-dev-sdk';
+import { S3Storage, LLMClient, Config } from 'coze-coding-dev-sdk';
 
 export interface ShipDesign {
   id: number;
@@ -34,15 +33,28 @@ export interface RecognizeResult {
 
 @Injectable()
 export class ShipDesignsService {
-  private storage = new S3Storage({
-    endpointUrl: process.env.COZE_BUCKET_ENDPOINT_URL,
-    accessKey: '',
-    secretKey: '',
-    bucketName: process.env.COZE_BUCKET_NAME,
-    region: 'cn-beijing',
-  });
+  private storage: S3Storage | null = null;
+  private llmClient: LLMClient | null = null;
 
-  private llmClient = new LLMClient(new Config());
+  private getStorage(): S3Storage {
+    if (!this.storage) {
+      this.storage = new S3Storage({
+        endpointUrl: process.env.COZE_BUCKET_ENDPOINT_URL || '',
+        accessKey: '',
+        secretKey: '',
+        bucketName: process.env.COZE_BUCKET_NAME || '',
+        region: 'cn-beijing',
+      });
+    }
+    return this.storage;
+  }
+
+  private getLLMClient(): LLMClient {
+    if (!this.llmClient) {
+      this.llmClient = new LLMClient(new Config());
+    }
+    return this.llmClient;
+  }
 
   async findAll(): Promise<{ code: number; msg: string; data: ShipDesign[] }> {
     const client = getSupabaseClient();
@@ -53,6 +65,7 @@ export class ShipDesignsService {
       .order('created_at', { ascending: false });
 
     if (error) {
+      console.error('Supabase query error:', error);
       throw new Error(`查询失败: ${error.message}`);
     }
 
@@ -118,14 +131,14 @@ export class ShipDesignsService {
     }
 
     // 上传到对象存储
-    const fileKey = await this.storage.uploadFile({
+    const fileKey = await this.getStorage().uploadFile({
       fileContent: fileBuffer,
       fileName: `ship-designs/${Date.now()}_${file.originalname || 'image.jpg'}`,
       contentType: file.mimetype || 'image/jpeg',
     });
 
     // 生成签名 URL（有效期30天）
-    const imageUrl = await this.storage.generatePresignedUrl({
+    const imageUrl = await this.getStorage().generatePresignedUrl({
       key: fileKey,
       expireTime: 2592000, // 30天
     });
@@ -157,14 +170,14 @@ export class ShipDesignsService {
     }
 
     // 上传图片到对象存储
-    const fileKey = await this.storage.uploadFile({
+    const fileKey = await this.getStorage().uploadFile({
       fileContent: fileBuffer,
       fileName: `ship-images/${Date.now()}_${file.originalname || 'image.jpg'}`,
       contentType: file.mimetype || 'image/jpeg',
     });
 
     // 生成签名 URL
-    const imageUrl = await this.storage.generatePresignedUrl({
+    const imageUrl = await this.getStorage().generatePresignedUrl({
       key: fileKey,
       expireTime: 3600,
     });
@@ -221,7 +234,7 @@ export class ShipDesignsService {
       },
     ];
 
-    const response = await this.llmClient.invoke(messages, {
+    const response = await this.getLLMClient().invoke(messages, {
       model: 'doubao-seed-1-6-vision-250815',
       temperature: 0.3,
     });
@@ -287,7 +300,7 @@ export class ShipDesignsService {
     messages.push({ role: 'user', content: message });
 
     // 调用 LLM
-    const response = await this.llmClient.invoke(messages, {
+    const response = await this.getLLMClient().invoke(messages, {
       model: 'doubao-seed-1-6-vision-250815',
       temperature: 0.7,
     });
