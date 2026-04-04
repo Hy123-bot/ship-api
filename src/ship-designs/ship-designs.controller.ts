@@ -55,14 +55,15 @@ export class ShipDesignsController {
   @Get('test-ai')
   async testAI() {
     try {
-      // 显示当前环境变量
+      const result = await this.shipDesignsService.testAI();
+      
+      // 在调用 service 后读取环境变量（service 会设置正确的值）
       const envInfo = {
-        COZE_WORKLOAD_IDENTITY_API_KEY: process.env.COZE_WORKLOAD_IDENTITY_API_KEY ? 'SET' : 'NOT SET',
+        COZE_WORKLOAD_IDENTITY_API_KEY: process.env.COZE_WORKLOAD_IDENTITY_API_KEY ? `SET (len=${process.env.COZE_WORKLOAD_IDENTITY_API_KEY.length})` : 'NOT SET',
         COZE_INTEGRATION_BASE_URL: process.env.COZE_INTEGRATION_BASE_URL,
         COZE_INTEGRATION_MODEL_BASE_URL: process.env.COZE_INTEGRATION_MODEL_BASE_URL,
       };
       
-      const result = await this.shipDesignsService.testAI();
       return { success: true, result, env: envInfo };
     } catch (error) {
       return { 
