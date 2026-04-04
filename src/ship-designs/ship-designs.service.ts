@@ -87,6 +87,24 @@ export class ShipDesignsService {
         process.env.COZE_WORKLOAD_IDENTITY_API_KEY = apiKey;
       }
       
+      // 设置正确的 API 端点（Railway 环境变量可能配置错误）
+      // 注意：正确的端点是 integration.coze.cn，不是 api.coze.cn
+      if (!process.env.COZE_INTEGRATION_BASE_URL || 
+          process.env.COZE_INTEGRATION_BASE_URL === 'https://api.coze.com' ||
+          process.env.COZE_INTEGRATION_BASE_URL === 'https://api.coze.cn') {
+        process.env.COZE_INTEGRATION_BASE_URL = 'https://integration.coze.cn';
+        console.log('Fixed COZE_INTEGRATION_BASE_URL to https://integration.coze.cn');
+      }
+      if (!process.env.COZE_INTEGRATION_MODEL_BASE_URL || 
+          process.env.COZE_INTEGRATION_MODEL_BASE_URL === 'https://model.coze.com' ||
+          process.env.COZE_INTEGRATION_MODEL_BASE_URL === 'https://api.coze.cn/api/v3') {
+        process.env.COZE_INTEGRATION_MODEL_BASE_URL = 'https://integration.coze.cn/api/v3';
+        console.log('Fixed COZE_INTEGRATION_MODEL_BASE_URL to https://integration.coze.cn/api/v3');
+      }
+      
+      console.log('COZE_INTEGRATION_BASE_URL:', process.env.COZE_INTEGRATION_BASE_URL);
+      console.log('COZE_INTEGRATION_MODEL_BASE_URL:', process.env.COZE_INTEGRATION_MODEL_BASE_URL);
+      
       this.llmClient = new LLMClient(new Config());
     }
     return this.llmClient;
