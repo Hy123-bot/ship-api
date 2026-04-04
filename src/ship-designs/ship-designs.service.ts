@@ -60,8 +60,9 @@ export class ShipDesignsService {
     try {
       // 调试：检查环境变量
       console.log('=== Debug: Environment Variables ===');
-      console.log('COZE_SUPABASE_URL:', process.env.COZE_SUPABASE_URL ? 'SET' : 'NOT SET');
-      console.log('COZE_SUPABASE_ANON_KEY:', process.env.COZE_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+      console.log('COZE_SUPABASE_URL:', process.env.COZE_SUPABASE_URL || 'NOT SET');
+      console.log('COZE_SUPABASE_ANON_KEY (first 20 chars):', process.env.COZE_SUPABASE_ANON_KEY?.substring(0, 20) || 'NOT SET');
+      console.log('OPENAI_API_KEY (first 10 chars):', process.env.OPENAI_API_KEY?.substring(0, 10) || 'NOT SET');
       
       const client = getSupabaseClient();
       console.log('Supabase client created successfully');
