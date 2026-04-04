@@ -392,11 +392,18 @@ export class ShipDesignsService {
     
     // 测试 LLM 调用
     const client = this.getLLMClient();
-    const response = await client.invoke(
-      [{ role: 'user', content: 'Say "test ok" in exactly these words' }],
-      { model: 'doubao-seed-1-6-vision-250815', temperature: 0.1 }
-    );
     
-    return response.content;
+    try {
+      const response = await client.invoke(
+        [{ role: 'user', content: 'Say "test ok" in exactly these words' }],
+        { model: 'doubao-seed-1-6-vision-250815', temperature: 0.1 }
+      );
+      
+      console.log('LLM Response:', JSON.stringify(response));
+      return response.content || 'Empty response';
+    } catch (error) {
+      console.error('LLM Error:', error);
+      throw error;
+    }
   }
 }
