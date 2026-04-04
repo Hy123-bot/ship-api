@@ -1,5 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { AppModule } from '@/app.module';
+import { NestExpressApplication } from '@nestjs/platform-express';
+import { join } from 'path';
 import * as express from 'express';
 import { HttpStatusInterceptor } from '@/interceptors/http-status.interceptor';
 
@@ -28,7 +30,10 @@ function parsePort(): number {
 }
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+
+  // 配置静态文件服务 - 提供 public 目录下的文件
+  app.useStaticAssets(join(__dirname, '..', 'public'));
 
   app.enableCors({
     origin: true,

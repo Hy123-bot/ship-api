@@ -1,0 +1,1354 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI船舶分析师 - 智能联网版</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(180deg, #e0f7fa 0%, #b2ebf2 100%);
+            min-height: 100vh;
+        }
+        .header {
+            background: linear-gradient(135deg, #1f7f8c 0%, #2c9faf 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+            border-radius: 0 0 24px 24px;
+        }
+        .header-icon {
+            width: 64px;
+            height: 64px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 0 auto 10px;
+            font-size: 32px;
+        }
+        .header h1 { font-size: 22px; margin-bottom: 5px; }
+        .header p { opacity: 0.9; font-size: 12px; }
+        .container { max-width: 800px; margin: 0 auto; padding: 15px; }
+        .card {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+            margin-bottom: 15px;
+            overflow: hidden;
+        }
+        .card-header {
+            padding: 12px 15px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            color: #1f7f8c;
+            font-size: 15px;
+        }
+        .card-body { padding: 15px; }
+        
+        /* 状态指示器 */
+        .status-bar {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px 15px;
+            background: #f0fdf4;
+            border-radius: 12px;
+            margin-bottom: 15px;
+        }
+        .status-bar.offline {
+            background: #fef3c7;
+        }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: #22c55e;
+        }
+        .status-bar.offline .status-dot { background: #f59e0b; }
+        .status-text { font-size: 13px; color: #166534; }
+        .status-bar.offline .status-text { color: #92400e; }
+        
+        /* 输入组件 */
+        .form-group { margin-bottom: 12px; }
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            font-weight: 500;
+            color: #1f7f8c;
+            margin-bottom: 5px;
+        }
+        .form-group input, .form-group textarea {
+            width: 100%;
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+        }
+        .form-group input:focus, .form-group textarea:focus {
+            outline: none;
+            border-color: #1f7f8c;
+        }
+        
+        /* 按钮 */
+        .btn {
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 14px;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+        .btn-primary { background: #f97316; color: white; }
+        .btn-secondary { background: #f3f4f6; color: #374151; }
+        .btn-teal { background: #1f7f8c; color: white; }
+        .btn-blue { background: #3b82f6; color: white; }
+        .btn:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-row { display: flex; gap: 10px; margin-top: 15px; }
+        .btn-row .btn { flex: 1; }
+        
+        /* 河流选择 */
+        .river-tabs {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding-bottom: 5px;
+        }
+        .river-tab {
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 13px;
+            cursor: pointer;
+            white-space: nowrap;
+            border: 1px solid #1f7f8c;
+            background: white;
+            color: #1f7f8c;
+            transition: all 0.3s;
+        }
+        .river-tab.active { background: #1f7f8c; color: white; }
+        .river-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            margin-top: 12px;
+        }
+        .river-card img {
+            width: 100%;
+            height: 140px;
+            object-fit: cover;
+        }
+        .river-card .info {
+            padding: 12px;
+            background: rgba(255,255,255,0.95);
+        }
+        .river-card .info h3 {
+            font-size: 16px;
+            color: #1f7f8c;
+            margin-bottom: 5px;
+        }
+        .river-card .info p {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+        }
+        
+        /* 上传区域 */
+        .upload-area {
+            border: 2px dashed #1f7f8c;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .upload-area:hover { background: #f0fafa; }
+        .upload-area .icon { font-size: 48px; margin-bottom: 10px; }
+        .upload-area p { color: #666; font-size: 14px; }
+        .upload-area .tip { color: #1f7f8c; font-size: 12px; margin-top: 5px; }
+        
+        .preview-container { text-align: center; }
+        .preview-container img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 12px;
+            margin-bottom: 10px;
+        }
+        .preview-container .recognizing {
+            color: #1f7f8c;
+            font-size: 14px;
+            margin: 10px 0;
+        }
+        .preview-container .btn-group {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        /* 报告 */
+        .report {
+            background: #fffbeb;
+            border-radius: 12px;
+            padding: 15px;
+            font-size: 13px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+        }
+        
+        /* 弹窗 */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            padding: 20px;
+        }
+        .modal-overlay.hidden { display: none; }
+        .modal {
+            background: white;
+            border-radius: 20px;
+            width: 100%;
+            max-width: 500px;
+            max-height: 85vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        .modal-header {
+            padding: 15px 20px;
+            border-bottom: 1px solid #eee;
+            font-weight: 600;
+            font-size: 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .modal-header .close {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #666;
+        }
+        .modal-body { padding: 20px; overflow-y: auto; flex: 1; }
+        .modal-footer { padding: 15px 20px; border-top: 1px solid #eee; }
+        
+        /* 聊天 */
+        .chat-container {
+            height: 350px;
+            overflow-y: auto;
+            background: #f3f4f6;
+            border-radius: 12px;
+            padding: 15px;
+        }
+        .chat-message { margin-bottom: 12px; display: flex; }
+        .chat-message.user { justify-content: flex-end; }
+        .chat-message .bubble {
+            max-width: 80%;
+            padding: 10px 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+        .chat-message.user .bubble {
+            background: #1f7f8c;
+            color: white;
+        }
+        .chat-message.assistant .bubble {
+            background: white;
+            color: #333;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .chat-input-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        .chat-input-row input {
+            flex: 1;
+            padding: 10px 15px;
+            border: 1px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+        }
+        
+        /* 加载动画 */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid #f3f3f3;
+            border-top: 2px solid #1f7f8c;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        /* 统计卡片 */
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        .stat-item { flex: 1; }
+        .stat-item .value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #1f7f8c;
+        }
+        .stat-item .label {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+        
+        /* 设计列表 */
+        .design-list { max-height: 300px; overflow-y: auto; }
+        
+        /* 小组选择 */
+        .group-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .group-selector label {
+            font-size: 14px;
+            color: #1f7f8c;
+            font-weight: 500;
+        }
+        .group-selector select {
+            flex: 1;
+            padding: 10px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            font-size: 14px;
+            background: white;
+            cursor: pointer;
+        }
+        
+        /* 提示卡片 */
+        .tip-card {
+            background: #e0f7fa;
+            border-left: 4px solid #1f7f8c;
+            padding: 12px 15px;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 15px;
+        }
+        .tip-card h4 {
+            font-size: 13px;
+            color: #1f7f8c;
+            margin-bottom: 5px;
+        }
+        .tip-card p {
+            font-size: 12px;
+            color: #0d7377;
+            line-height: 1.6;
+        }
+        
+        /* API配置 */
+        .api-config {
+            background: #f8fafc;
+            border: 1px solid #e2e8f0;
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 15px;
+        }
+        .api-config h4 {
+            font-size: 14px;
+            color: #1f7f8c;
+            margin-bottom: 10px;
+        }
+        .api-config input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+        .api-config .hint {
+            font-size: 11px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <!-- 头部 -->
+    <div class="header">
+        <div class="header-icon">🚢</div>
+        <h1>AI船舶分析师</h1>
+        <p>智能识别 · AI对话 · 适航评估</p>
+    </div>
+
+    <div class="container">
+        <!-- API配置 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="api-config">
+                    <h4>🌐 API服务地址（可选）</h4>
+                    <input type="text" id="apiUrl" placeholder="留空使用默认地址">
+                    <p class="hint">💡 填写你的后端API地址，留空则自动检测。示例：https://your-server.com</p>
+                </div>
+                
+                <!-- 连接状态 -->
+                <div class="status-bar" id="statusBar">
+                    <div class="status-dot"></div>
+                    <span class="status-text" id="statusText">正在检测API连接...</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 小组选择 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="group-selector">
+                    <label>选择小组：</label>
+                    <select id="groupSelect">
+                        <option value="1">第1组</option>
+                        <option value="2">第2组</option>
+                        <option value="3">第3组</option>
+                        <option value="4">第4组</option>
+                        <option value="5">第5组</option>
+                        <option value="6">第6组</option>
+                        <option value="7">第7组</option>
+                        <option value="8">第8组</option>
+                        <option value="9">第9组</option>
+                        <option value="10">第10组</option>
+                        <option value="11">第11组</option>
+                        <option value="12">第12组</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 河流环境选择 -->
+        <div class="card">
+            <div class="card-body">
+                <div class="river-tabs" id="riverTabs">
+                    <div class="river-tab" data-river="mountain">山间激流</div>
+                    <div class="river-tab" data-river="canal">城市运河</div>
+                    <div class="river-tab active" data-river="lake">宽阔江面</div>
+                    <div class="river-tab" data-river="wetland">湿地浅滩</div>
+                    <div class="river-tab" data-river="estuary">近海河口</div>
+                </div>
+                <div class="river-card">
+                    <img id="riverImg" src="https://picui.ogmua.cn/s1/2026/03/27/69c6a31114750.webp" alt="河流环境">
+                    <div class="info">
+                        <h3 id="riverName">宽阔江面</h3>
+                        <p id="riverDesc">水面宽阔，风浪较大，周边景点，远处有大桥。</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 图片上传（AI识别） -->
+        <div class="card">
+            <div class="card-header">📷 图片识别（需要联网）</div>
+            <div class="card-body">
+                <div id="uploadArea" class="upload-area">
+                    <div class="icon">📷</div>
+                    <p>点击选择船舶设计图片</p>
+                    <p class="tip">AI将自动识别：船体材料、船首形状、船底形状、动力方式</p>
+                </div>
+                <div id="previewArea" class="preview-container" style="display: none;">
+                    <img id="previewImg" src="" alt="预览">
+                    <div id="recognizingText" class="recognizing" style="display: none;">
+                        <span class="loading"></span> AI正在识别图片中...
+                    </div>
+                    <div class="btn-group">
+                        <button class="btn btn-secondary" onclick="clearImage()">清除图片</button>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept="image/*" style="display: none;">
+            </div>
+        </div>
+
+        <!-- 使用说明 -->
+        <div class="tip-card">
+            <h4>📌 使用说明</h4>
+            <p>1. 配置API地址（可选，留空自动检测）<br>
+               2. 选择小组和河流环境<br>
+               3. 上传图片自动识别或手动填写参数<br>
+               4. 点击「开始评估」生成报告</p>
+        </div>
+
+        <!-- 船舶设计表单 -->
+        <div class="card">
+            <div class="card-header">📐 船舶设计档案</div>
+            <div class="card-body">
+                <div class="form-group">
+                    <label>🏗️ 船体材料 *</label>
+                    <input type="text" id="material" placeholder="如：柚木船体、铝合金船体、钢铁船体">
+                </div>
+                <div class="form-group">
+                    <label>🔻 船首形状 *</label>
+                    <input type="text" id="bowShape" placeholder="如：尖削型船首、平头型船首">
+                </div>
+                <div class="form-group">
+                    <label>🛶 船底形状 *</label>
+                    <input type="text" id="bottomShape" placeholder="如：深V型船底、平底型船底">
+                </div>
+                <div class="form-group">
+                    <label>📦 货物情况</label>
+                    <input type="text" id="cargoInfo" placeholder="如：3个货物，均匀对称分布">
+                </div>
+                <div class="form-group">
+                    <label>🚤 动力方式 *</label>
+                    <input type="text" id="propulsion" placeholder="如：喷水推进、螺旋桨推进">
+                </div>
+                <div class="form-group">
+                    <label>✨ 特殊设计（可选）</label>
+                    <input type="text" id="specialDesign" placeholder="如：防腐涂层、防撞护舷等">
+                </div>
+                <div class="btn-row">
+                    <button class="btn btn-secondary" onclick="fillExample()">📋 示例设计</button>
+                    <button class="btn btn-primary" onclick="evaluateShip()">🔍 开始评估</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- 评估报告 -->
+        <div id="reportCard" class="card" style="display: none;">
+            <div class="card-header">🤖 适航性评估报告</div>
+            <div class="card-body">
+                <div class="report" id="reportContent"></div>
+            </div>
+        </div>
+
+        <!-- 底部操作按钮 -->
+        <div class="btn-row" style="margin-bottom: 30px;">
+            <button class="btn btn-teal" onclick="openTeacherModal()">🏆 教师评比</button>
+            <button class="btn btn-blue" onclick="openChatModal()">💬 AI老师</button>
+        </div>
+    </div>
+
+    <!-- 教师评比弹窗 -->
+    <div id="teacherModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span>📊 小组设计评比</span>
+                <button class="close" onclick="closeTeacherModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div style="text-align: center; padding: 20px;">
+                    <p style="font-size: 14px; color: #666; margin-bottom: 15px;">本地存储的设计记录</p>
+                    <div class="stats-row" style="background: #f3f4f6; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+                        <div class="stat-item">
+                            <div class="value" id="statTotal">0</div>
+                            <div class="label">参赛小组</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="value" id="statAvg">0</div>
+                            <div class="label">平均分</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="value" id="statMax">0</div>
+                            <div class="label">最高分</div>
+                        </div>
+                    </div>
+                    <div class="btn-row" style="margin-bottom: 15px;">
+                        <button class="btn btn-secondary" onclick="exportLocalData()">📄 导出报告</button>
+                        <button class="btn btn-secondary" onclick="clearLocalData()">🗑️ 清空数据</button>
+                    </div>
+                    <div class="design-list" id="designList"></div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="closeTeacherModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 设计详情弹窗 -->
+    <div id="detailModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span id="detailTitle">设计详情</span>
+                <button class="close" onclick="closeDetailModal()">×</button>
+            </div>
+            <div class="modal-body" id="detailBody"></div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="closeDetailModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- AI聊天弹窗 -->
+    <div id="chatModal" class="modal-overlay hidden">
+        <div class="modal">
+            <div class="modal-header">
+                <span>🚢 AI船舶分析师</span>
+                <button class="close" onclick="closeChatModal()">×</button>
+            </div>
+            <div class="modal-body">
+                <div class="chat-container" id="chatContainer">
+                    <div style="text-align: center; padding: 40px 0; color: #9ca3af;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🚢</div>
+                        <p>你好！我是AI船舶分析师</p>
+                        <p style="font-size: 12px; margin-top: 5px;">有什么船舶设计问题都可以问我~</p>
+                    </div>
+                </div>
+                <div class="chat-input-row">
+                    <input type="text" id="chatInput" placeholder="输入你的问题..." onkeypress="handleChatKeypress(event)">
+                    <button class="btn btn-teal" onclick="sendChatMessage()">发送</button>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="closeChatModal()">关闭并清空对话</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ========== 配置 ==========
+        const DEFAULT_API_URLS = [
+            'https://ship-api-production-9fc7.up.railway.app',  // Railway 公网地址（最新）
+            'https://ship-api-production.up.railway.app',
+            'http://localhost:3000'
+        ];
+        
+        let API_BASE = '';
+        let isOnline = false;
+        
+        // 河流数据
+        const RIVERS = {
+            mountain: {
+                name: '山间激流',
+                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a2c0044dd.webp',
+                desc: '峡谷之间，水流湍急，暗礁密布，河道狭窄且落差大。'
+            },
+            canal: {
+                name: '城市运河',
+                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a2fab7ac6.webp',
+                desc: '城市运河，两岸景区步道，行人众多，水面平静。'
+            },
+            lake: {
+                name: '宽阔江面',
+                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a31114750.webp',
+                desc: '水面宽阔，风浪较大，周边景点，远处有大桥。'
+            },
+            wetland: {
+                name: '湿地浅滩',
+                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a3217dc40.webp',
+                desc: '芦苇丛生，候鸟栖息，水浅（<0.5m），生态敏感。'
+            },
+            estuary: {
+                name: '近海河口',
+                img: 'https://picui.ogmua.cn/s1/2026/03/27/69c6a32852438.webp',
+                desc: '咸淡水交汇，潮汐影响大，风浪混合，腐蚀性强。'
+            }
+        };
+
+        // 价格映射
+        const PRICE_MAP = {
+            material: { '柚木船体': 50, '铝合金船体': 60, '钢铁船体': 45, '木质船体': 30, '塑料船体': 20, '轮胎船体': 15, '泡沫船体': 15 },
+            bow: { '尖削型船首': 40, '平头型船首': 25, '圆头型船首': 30, '勺型船首': 35, '上翘型船首': 45 },
+            bottom: { '深V型船底': 55, '平底型船底': 30, '圆舭型船底': 40 },
+            power: { '喷水推进': 60, '喷气推进': 70, '蒸汽推进': 55, '螺旋桨推进': 40, '电动推进': 50, '人力划桨': 10, '风帆动力': 35, '核动力推进': 100 }
+        };
+
+        const BUDGET = 200;
+
+        // 状态
+        let currentRiver = 'lake';
+        let previewImage = null;
+        let localDesigns = JSON.parse(localStorage.getItem('shipDesigns') || '[]');
+        let chatMessages = [];
+
+        // ========== 初始化 ==========
+        async function init() {
+            // 检测API连接
+            await checkAPIConnection();
+            
+            // 初始化河流显示
+            updateRiverDisplay();
+        }
+
+        // 检测API连接
+        async function checkAPIConnection() {
+            const statusBar = document.getElementById('statusBar');
+            const statusText = document.getElementById('statusText');
+            const customUrl = document.getElementById('apiUrl').value.trim();
+            
+            // 构建待测试的URL列表
+            const urlsToTest = customUrl ? [customUrl] : DEFAULT_API_URLS;
+            
+            for (const url of urlsToTest) {
+                try {
+                    // 尝试连接健康检查端点
+                    const response = await fetch(`${url}/api/health`, {
+                        method: 'GET',
+                        headers: { 'Content-Type': 'application/json' }
+                    });
+                    
+                    if (response.ok) {
+                        API_BASE = url;
+                        isOnline = true;
+                        statusBar.classList.remove('offline');
+                        statusText.textContent = `✅ 已连接: ${url}`;
+                        console.log('API连接成功:', url);
+                        return;
+                    }
+                } catch (e) {
+                    console.log('连接失败:', url, e.message);
+                }
+            }
+            
+            // 所有URL都连接失败
+            isOnline = false;
+            statusBar.classList.add('offline');
+            statusText.textContent = '⚠️ 离线模式（AI功能不可用）';
+            console.log('API连接失败，使用离线模式');
+        }
+
+        // ========== 河流选择 ==========
+        document.querySelectorAll('.river-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.river-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                currentRiver = this.dataset.river;
+                updateRiverDisplay();
+            });
+        });
+
+        function updateRiverDisplay() {
+            const river = RIVERS[currentRiver];
+            document.getElementById('riverImg').src = river.img;
+            document.getElementById('riverName').textContent = river.name;
+            document.getElementById('riverDesc').textContent = river.desc;
+        }
+
+        // ========== 图片上传与AI识别 ==========
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+
+        uploadArea.addEventListener('click', () => fileInput.click());
+        fileInput.addEventListener('change', handleFileSelect);
+
+        async function handleFileSelect(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                alert('请选择图片文件');
+                return;
+            }
+
+            // 检查文件大小
+            if (file.size > 10 * 1024 * 1024) {
+                alert('图片大小不能超过10MB');
+                return;
+            }
+
+            previewImage = file;
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                document.getElementById('previewImg').src = e.target.result;
+                uploadArea.style.display = 'none';
+                document.getElementById('previewArea').style.display = 'block';
+                
+                // 自动进行AI识别
+                recognizeImage(file);
+            };
+            reader.readAsDataURL(file);
+        }
+
+        // AI识别图片
+        async function recognizeImage(file) {
+            if (!isOnline) {
+                alert('⚠️ 离线模式无法使用AI识别功能\n\n请手动填写船舶设计参数');
+                return;
+            }
+
+            const recognizingText = document.getElementById('recognizingText');
+            recognizingText.style.display = 'block';
+
+            try {
+                // 使用 FormData 上传文件
+                const formData = new FormData();
+                formData.append('file', file);
+
+                // 调用AI识别接口
+                const response = await fetch(`${API_BASE}/api/ship-designs/recognize`, {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (!response.ok) {
+                    throw new Error('识别请求失败');
+                }
+
+                const result = await response.json();
+                console.log('识别结果:', result);
+
+                // 填充表单
+                if (result.data) {
+                    const data = result.data;
+                    if (data.material) document.getElementById('material').value = data.material;
+                    if (data.bow_shape) document.getElementById('bowShape').value = data.bow_shape;
+                    if (data.bottom_shape) document.getElementById('bottomShape').value = data.bottom_shape;
+                    if (data.propulsion) document.getElementById('propulsion').value = data.propulsion;
+                    if (data.cargo_info) document.getElementById('cargoInfo').value = data.cargo_info;
+                    
+                    alert('✅ AI识别成功！已自动填充设计参数');
+                }
+            } catch (error) {
+                console.error('识别失败:', error);
+                alert('❌ AI识别失败，请手动填写参数\n\n错误信息: ' + error.message);
+            } finally {
+                recognizingText.style.display = 'none';
+            }
+        }
+
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = reject;
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function clearImage() {
+            previewImage = null;
+            fileInput.value = '';
+            uploadArea.style.display = 'block';
+            document.getElementById('previewArea').style.display = 'none';
+        }
+
+        // ========== 评估功能 ==========
+        function fillExample() {
+            document.getElementById('material').value = '柚木船体';
+            document.getElementById('bowShape').value = '尖削型船首';
+            document.getElementById('bottomShape').value = '深V型船底';
+            document.getElementById('propulsion').value = '喷水推进';
+            document.getElementById('cargoInfo').value = '3个货物，均匀对称分布';
+            document.getElementById('specialDesign').value = '防腐涂层';
+        }
+
+        function evaluateShip() {
+            const material = document.getElementById('material').value.trim();
+            const bowShape = document.getElementById('bowShape').value.trim();
+            const bottomShape = document.getElementById('bottomShape').value.trim();
+            const propulsion = document.getElementById('propulsion').value.trim();
+            const cargoInfo = document.getElementById('cargoInfo').value.trim();
+            const specialDesign = document.getElementById('specialDesign').value.trim();
+
+            if (!material || !bowShape || !bottomShape || !propulsion) {
+                alert('请填写完整的设计参数（船体材料、船首形状、船底形状、动力方式）');
+                return;
+            }
+
+            // 计算货物数量
+            const cargoMatch = cargoInfo.match(/(\d+)个/);
+            const cargoCount = cargoMatch ? parseInt(cargoMatch[1]) : 0;
+
+            // 计算花费
+            const materialCost = PRICE_MAP.material[material] || 0;
+            const bowCost = PRICE_MAP.bow[bowShape] || 0;
+            const bottomCost = PRICE_MAP.bottom[bottomShape] || 0;
+            const powerCost = PRICE_MAP.power[propulsion] || 0;
+            const totalCost = materialCost + bowCost + bottomCost + powerCost;
+
+            const overBudget = totalCost > BUDGET;
+            const remaining = BUDGET - totalCost;
+
+            // 计算得分
+            let score = 80;
+            const problems = [];
+            const suggestions = [];
+            const advantages = [];
+
+            // 预算分析
+            if (overBudget) {
+                score -= 20;
+                problems.push(`💰 预算超支 ${Math.abs(remaining)} 元`);
+                suggestions.push(`💡 建议更换更经济的材料或动力系统`);
+            } else {
+                advantages.push(`✅ 预算合理，剩余 ${remaining} 元`);
+            }
+
+            // 载重分析
+            if (cargoCount > 4) {
+                score -= 15;
+                problems.push(`📦 载重过大（${cargoCount} 个货物单位），超过安全上限 4 个`);
+            } else if (cargoCount > 0) {
+                advantages.push(`✅ 载重适中（${cargoCount} 个货物单位）`);
+            }
+
+            // 货物分布
+            if (cargoCount >= 2 && cargoInfo) {
+                const isUniform = cargoInfo.includes('均匀') || cargoInfo.includes('对称');
+                if (isUniform) {
+                    advantages.push(`✅ 货物均匀对称分布`);
+                } else {
+                    problems.push(`⚠️ 请确保货物均匀对称分布`);
+                    suggestions.push(`💡 货物必须均匀对称分布，避免船体倾斜侧翻`);
+                }
+            }
+
+            // 场景适配
+            if (currentRiver === 'mountain') {
+                if (!bottomShape.includes('深V') && !bottomShape.includes('V')) {
+                    score -= 15;
+                    problems.push(`🌊 ${bottomShape}不适合激流航行`);
+                    suggestions.push(`💡 山间激流建议使用深V型船底`);
+                } else {
+                    advantages.push(`✅ 深V型船底适合激流`);
+                }
+                if (!bowShape.includes('尖')) {
+                    score -= 12;
+                    problems.push(`⛵ ${bowShape}阻力大，难以逆流而上`);
+                    suggestions.push(`💡 建议使用尖削型船首`);
+                } else {
+                    advantages.push(`✅ 尖削型船首减少阻力`);
+                }
+                if (propulsion.includes('人力') || propulsion.includes('风帆')) {
+                    score -= 10;
+                    problems.push(`⚡ ${propulsion}动力不足，无法应对急流`);
+                    suggestions.push(`💡 建议使用喷水推进或螺旋桨推进`);
+                }
+                if (material.includes('木') || material.includes('塑料')) {
+                    score -= 8;
+                    problems.push(`🪵 ${material}在激流冲击下易损坏`);
+                    suggestions.push(`💡 建议使用铝合金或钢铁船体`);
+                }
+            } else if (currentRiver === 'canal') {
+                advantages.push(`✅ 运河水流平稳，对船型要求较低`);
+                if (propulsion.includes('喷气') || propulsion.includes('核动力')) {
+                    score -= 10;
+                    problems.push(`⚡ ${propulsion}动力过大，运河限速区域不适用`);
+                    suggestions.push(`💡 建议使用电动推进，安静环保`);
+                }
+            } else if (currentRiver === 'lake') {
+                if (bottomShape.includes('平底')) {
+                    score -= 15;
+                    problems.push(`🌊 平底船在湖泊风浪中横摇剧烈，稳定性差`);
+                    suggestions.push(`💡 建议使用深V型或圆舭型船底`);
+                } else {
+                    advantages.push(`✅ ${bottomShape}适合湖泊风浪环境`);
+                }
+                if (!specialDesign.includes('水密隔舱') && cargoCount > 2) {
+                    problems.push(`⚠️ 湖泊突发风浪可能导致进水风险`);
+                    suggestions.push(`💡 建议增加水密隔舱设计`);
+                }
+            } else if (currentRiver === 'wetland') {
+                if (!bottomShape.includes('平底')) {
+                    score -= 20;
+                    problems.push(`🌊 ${bottomShape}吃水过深，在浅水区（<0.5m）极易搁浅`);
+                    suggestions.push(`💡 湿地浅滩必须使用平底船底`);
+                } else {
+                    advantages.push(`✅ 平底船底吃水浅，适合湿地航行`);
+                }
+                if (bowShape.includes('尖')) {
+                    score -= 10;
+                    problems.push(`🌿 尖船首容易挂住芦苇和水草`);
+                    suggestions.push(`💡 建议使用平头型或圆头型船首`);
+                }
+                if (propulsion.includes('螺旋桨')) {
+                    problems.push(`⚠️ 螺旋桨容易缠绕水草`);
+                    suggestions.push(`💡 建议使用喷水推进`);
+                }
+                if (material.includes('钢铁')) {
+                    score -= 8;
+                    problems.push(`🪵 钢铁船体重量大，浅水区推进困难`);
+                    suggestions.push(`💡 建议使用轻质材料如铝合金或塑料`);
+                }
+            } else if (currentRiver === 'estuary') {
+                if (material.includes('木')) {
+                    score -= 15;
+                    problems.push(`🧂 木质船体不耐咸淡水混合环境，易腐蚀`);
+                    suggestions.push(`💡 建议使用铝合金或玻璃钢材质`);
+                }
+                if (!specialDesign.includes('防腐涂层')) {
+                    problems.push(`⚠️ 河口咸淡水环境腐蚀性强`);
+                    suggestions.push(`💡 建议增加防腐涂层`);
+                } else {
+                    advantages.push(`✅ 防腐涂层有效抵抗咸淡水腐蚀`);
+                }
+                if (propulsion.includes('人力') || propulsion.includes('风帆')) {
+                    score -= 8;
+                    problems.push(`⚡ 潮汐水流变化大，人力/风帆难以应对`);
+                    suggestions.push(`💡 建议使用机械动力`);
+                }
+            }
+
+            // 特殊设计加分
+            if (specialDesign.includes('防腐涂层')) {
+                score += 5;
+                advantages.push(`✅ 防腐涂层提高船体耐久性`);
+            }
+            if (specialDesign.includes('水密隔舱')) {
+                score += 10;
+                advantages.push(`✅ 水密隔舱大幅提高安全性`);
+            }
+            if (specialDesign.includes('防撞护舷')) {
+                score += 5;
+                advantages.push(`✅ 防撞护舷保护船体免受撞击`);
+            }
+
+            score = Math.min(100, Math.max(20, score));
+
+            const star = score >= 90 ? '⭐⭐⭐⭐⭐ 优秀' :
+                score >= 80 ? '⭐⭐⭐⭐ 良好' :
+                score >= 70 ? '⭐⭐⭐ 合格' :
+                    score >= 60 ? '⭐⭐ 需改进' : '⭐ 不合格';
+
+            const river = RIVERS[currentRiver];
+            const report = `📊 综合评分：${score}分 ${star}
+
+══════════════════════════
+💰 预算分析
+══════════════════════════
+总花费：${totalCost} 元 / 预算：${BUDGET} 元
+• 船体材料：${material}（${materialCost}元）
+• 船首形状：${bowShape}（${bowCost}元）
+• 船底形状：${bottomShape}（${bottomCost}元）
+• 动力系统：${propulsion}（${powerCost}元）
+${overBudget ? `⚠️ 超支 ${Math.abs(remaining)} 元` : `✅ 剩余 ${remaining} 元`}
+
+══════════════════════════
+🌊 航行环境：${river.name}
+══════════════════════════
+${river.desc}
+
+══════════════════════════
+📋 设计配置
+══════════════════════════
+• 船体材料：${material}
+• 船首形状：${bowShape}
+• 船底形状：${bottomShape}
+• 动力方式：${propulsion}
+• 载重配置：${cargoInfo || '无'}
+• 特殊设计：${specialDesign || '无'}
+
+══════════════════════════
+✅ 设计亮点
+══════════════════════════
+${advantages.length ? advantages.join('\n') : '暂无明显亮点'}
+
+══════════════════════════
+⚠️ 问题诊断
+══════════════════════════
+${problems.length ? problems.join('\n') : '✅ 未发现明显问题'}
+
+══════════════════════════
+💡 改进建议
+══════════════════════════
+${suggestions.length ? suggestions.join('\n') : '设计合理，建议保持当前配置'}`;
+
+            // 显示报告
+            document.getElementById('reportContent').textContent = report;
+            document.getElementById('reportCard').style.display = 'block';
+            document.getElementById('reportCard').scrollIntoView({ behavior: 'smooth' });
+
+            // 保存到本地存储
+            const selectedGroup = document.getElementById('groupSelect').value;
+            const design = {
+                id: Date.now(),
+                group_id: parseInt(selectedGroup),
+                group_name: `第${selectedGroup}组`,
+                river_id: currentRiver,
+                river_name: river.name,
+                material,
+                bow_shape: bowShape,
+                bottom_shape: bottomShape,
+                propulsion,
+                cargo_info: cargoInfo,
+                cargo_count: cargoCount,
+                special_design: specialDesign,
+                score,
+                total_cost: totalCost,
+                report,
+                created_at: new Date().toISOString()
+            };
+
+            // 检查是否已存在该组的设计
+            const existingIndex = localDesigns.findIndex(d => d.group_id === design.group_id);
+            if (existingIndex >= 0) {
+                localDesigns[existingIndex] = design;
+                alert('✅ 已更新第' + selectedGroup + '组的设计');
+            } else {
+                localDesigns.push(design);
+                alert('✅ 已保存第' + selectedGroup + '组的设计');
+            }
+
+            localStorage.setItem('shipDesigns', JSON.stringify(localDesigns));
+        }
+
+        // ========== 教师评比 ==========
+        function openTeacherModal() {
+            updateStats();
+            renderDesignList();
+            document.getElementById('teacherModal').classList.remove('hidden');
+        }
+
+        function closeTeacherModal() {
+            document.getElementById('teacherModal').classList.add('hidden');
+        }
+
+        function updateStats() {
+            const total = localDesigns.length;
+            const avg = total ? (localDesigns.reduce((a, c) => a + c.score, 0) / total).toFixed(1) : 0;
+            const max = total ? Math.max(...localDesigns.map(d => d.score)) : 0;
+            document.getElementById('statTotal').textContent = total;
+            document.getElementById('statAvg').textContent = avg;
+            document.getElementById('statMax').textContent = max;
+        }
+
+        function renderDesignList() {
+            const container = document.getElementById('designList');
+            if (localDesigns.length === 0) {
+                container.innerHTML = '<div style="text-align: center; padding: 20px; color: #9ca3af;">暂无设计数据<br>完成评估后会自动保存</div>';
+                return;
+            }
+
+            const sorted = [...localDesigns].sort((a, b) => b.score - a.score);
+            
+            container.innerHTML = sorted.map(d => `
+                <div style="background: #f9fafb; border-radius: 12px; padding: 12px; margin-bottom: 10px; border-left: 4px solid ${d.score >= 80 ? '#10b981' : d.score >= 60 ? '#3b82f6' : '#ef4444'}; cursor: pointer;" onclick="showDetail(${d.id})">
+                    <div style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <div style="font-weight: 500;">${d.group_name}</div>
+                            <div style="font-size: 12px; color: #666; margin-top: 3px;">${d.river_name} · ${d.material}</div>
+                        </div>
+                        <div style="text-align: right;">
+                            <div style="font-size: 18px; font-weight: bold; color: #1f7f8c;">${d.score}分</div>
+                            <div style="font-size: 12px; color: #666;">花费 ${d.total_cost}元</div>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function showDetail(id) {
+            const design = localDesigns.find(d => d.id === id);
+            if (!design) return;
+
+            document.getElementById('detailTitle').textContent = design.group_name;
+            document.getElementById('detailBody').innerHTML = `
+                <div style="background: #f3f4f6; border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+                        <span style="padding: 4px 12px; border-radius: 15px; font-size: 12px; background: ${design.score >= 80 ? '#10b981' : design.score >= 60 ? '#3b82f6' : '#ef4444'}; color: white;">${design.score >= 80 ? '优秀' : design.score >= 60 ? '合格' : '待改进'}</span>
+                        <span style="font-size: 24px; font-weight: bold; color: #1f7f8c;">${design.score}分</span>
+                    </div>
+                    <div style="display: flex; flex-wrap: wrap; gap: 8px;">
+                        <span style="padding: 4px 10px; background: #e5e7eb; border-radius: 15px; font-size: 12px;">${design.material}</span>
+                        <span style="padding: 4px 10px; background: #e5e7eb; border-radius: 15px; font-size: 12px;">${design.bow_shape}</span>
+                        <span style="padding: 4px 10px; background: #e5e7eb; border-radius: 15px; font-size: 12px;">${design.bottom_shape}</span>
+                        <span style="padding: 4px 10px; background: #e5e7eb; border-radius: 15px; font-size: 12px;">${design.propulsion}</span>
+                    </div>
+                </div>
+                <div class="report">${design.report}</div>
+            `;
+            document.getElementById('detailModal').classList.remove('hidden');
+        }
+
+        function closeDetailModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        function exportLocalData() {
+            if (localDesigns.length === 0) {
+                alert('暂无数据可导出');
+                return;
+            }
+
+            let text = '船舶设计评比报告\n';
+            text += `导出时间：${new Date().toLocaleString()}\n\n`;
+            text += '='.repeat(40) + '\n\n';
+
+            const sorted = [...localDesigns].sort((a, b) => b.score - a.score);
+            sorted.forEach((d, i) => {
+                text += `${i + 1}. ${d.group_name} - ${d.score}分\n`;
+                text += `   环境：${d.river_name}\n`;
+                text += `   材料：${d.material}\n`;
+                text += `   船首：${d.bow_shape}\n`;
+                text += `   船底：${d.bottom_shape}\n`;
+                text += `   动力：${d.propulsion}\n`;
+                text += `   花费：${d.total_cost}元\n\n`;
+            });
+
+            navigator.clipboard.writeText(text).then(() => {
+                alert('报告已复制到剪贴板');
+            }).catch(() => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                document.execCommand('copy');
+                document.body.removeChild(textarea);
+                alert('报告已复制到剪贴板');
+            });
+        }
+
+        function clearLocalData() {
+            if (confirm('确定要清空所有设计数据吗？')) {
+                localDesigns = [];
+                localStorage.removeItem('shipDesigns');
+                updateStats();
+                renderDesignList();
+                alert('数据已清空');
+            }
+        }
+
+        // ========== AI聊天 ==========
+        function openChatModal() {
+            document.getElementById('chatModal').classList.remove('hidden');
+        }
+
+        function closeChatModal() {
+            document.getElementById('chatModal').classList.add('hidden');
+            chatMessages = [];
+            document.getElementById('chatContainer').innerHTML = `
+                <div style="text-align: center; padding: 40px 0; color: #9ca3af;">
+                    <div style="font-size: 48px; margin-bottom: 10px;">🚢</div>
+                    <p>你好！我是AI船舶分析师</p>
+                    <p style="font-size: 12px; margin-top: 5px;">有什么船舶设计问题都可以问我~</p>
+                </div>
+            `;
+        }
+
+        function handleChatKeypress(e) {
+            if (e.key === 'Enter') sendChatMessage();
+        }
+
+        async function sendChatMessage() {
+            const input = document.getElementById('chatInput');
+            const message = input.value.trim();
+            if (!message) return;
+
+            input.value = '';
+            chatMessages.push({ role: 'user', content: message });
+            renderChatMessages();
+
+            // 添加加载提示
+            const container = document.getElementById('chatContainer');
+            const loadingDiv = document.createElement('div');
+            loadingDiv.className = 'chat-message assistant';
+            loadingDiv.id = 'loading-message';
+            loadingDiv.innerHTML = '<div class="bubble"><span class="loading"></span> AI思考中...</div>';
+            container.appendChild(loadingDiv);
+            container.scrollTop = container.scrollHeight;
+
+            try {
+                let reply = '';
+                
+                if (isOnline) {
+                    // 在线模式：调用AI接口
+                    const response = await fetch(`${API_BASE}/api/ship-designs/chat`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ message })
+                    });
+
+                    if (!response.ok) {
+                        throw new Error('AI服务暂时不可用');
+                    }
+
+                    const result = await response.json();
+                    reply = result.data?.reply || result.data?.content || '抱歉，我没有理解您的问题。';
+                } else {
+                    // 离线模式：关键词匹配
+                    reply = getOfflineReply(message);
+                }
+
+                // 移除加载提示
+                const loadingMsg = document.getElementById('loading-message');
+                if (loadingMsg) loadingMsg.remove();
+
+                chatMessages.push({ role: 'assistant', content: reply });
+                renderChatMessages();
+            } catch (error) {
+                console.error('聊天失败:', error);
+                
+                // 移除加载提示
+                const loadingMsg = document.getElementById('loading-message');
+                if (loadingMsg) loadingMsg.remove();
+
+                // 使用离线回复
+                const reply = getOfflineReply(message);
+                chatMessages.push({ role: 'assistant', content: reply });
+                renderChatMessages();
+            }
+        }
+
+        // 离线模式的关键词回复
+        function getOfflineReply(message) {
+            const replies = {
+                '深V': '深V型船底适合风浪大的环境，如山间激流和宽阔江面。它能有效切开波浪，保持航向稳定。建议搭配尖削型船首和喷水推进系统。',
+                '平底': '平底型船底适合浅水环境，如湿地浅滩。吃水浅，不易搁浅，但稳定性较差，不适合风浪大的水域。',
+                '尖削': '尖削型船首减少水阻，适合需要逆流而上的场景，如山间激流。能快速破浪，提高航速。',
+                '平头': '平头型船首适合湿地浅滩等芦苇丛生的环境，不容易挂住水草。但阻力较大，不适合急流。',
+                '山间激流': '山间激流环境建议配置：\n• 深V型船底（切浪稳定）\n• 尖削型船首（减少阻力）\n• 喷水推进（强大动力）\n• 铝合金船体（坚固耐撞击）\n• 预算约180元',
+                '城市运河': '城市运河环境建议配置：\n• 圆舭型船底（适中稳定）\n• 圆头型船首（美观安全）\n• 电动推进（安静环保）\n• 木质或塑料船体\n• 预算约120元',
+                '宽阔江面': '宽阔江面环境建议配置：\n• 深V型船底（抗风浪）\n• 尖削型船首（提高航速）\n• 螺旋桨推进（经济实用）\n• 铝合金船体\n• 预算约150元',
+                '湿地浅滩': '湿地浅滩环境建议配置：\n• 平底型船底（防搁浅）\n• 平头型船首（防挂草）\n• 喷水推进（防缠绕）\n• 塑料或泡沫船体（轻质）\n• 预算约100元',
+                '近海河口': '近海河口环境建议配置：\n• 深V型船底（抗风浪）\n• 尖削型船首（切浪）\n• 喷气推进（强大动力）\n• 铝合金船体+防腐涂层\n• 预算约190元',
+                '货物': '货物配置建议：\n• 安全上限：4个货物单位\n• 必须均匀对称分布\n• 每个货物约1个单位\n• 超载会严重影响稳定性\n• 分布不均会导致侧翻风险',
+                '预算': '预算分配建议（总预算200元）：\n• 船体材料：30-60元\n• 船首形状：25-45元\n• 船底形状：30-55元\n• 动力系统：10-70元\n\n经济型配置：木质船体+平头船首+平底船底+人力划桨 = 约65元\n高端配置：铝合金船体+尖削船首+深V船底+喷水推进 = 约195元',
+                '防腐': '防腐涂层是河口和海洋环境的重要设计，能有效抵抗咸水腐蚀。建议在铝合金或钢铁船体上添加，增加约5分评分。',
+                '水密': '水密隔舱是重要的安全设计，当船体进水时能防止沉没。建议载重较大时添加，增加约10分评分。',
+                '防撞': '防撞护舷能保护船体免受撞击损坏，特别适合运河和港口环境。增加约5分评分。',
+                '喷水': '喷水推进适合多种环境：\n• 山间激流：动力强劲\n• 湿地浅滩：无螺旋桨缠绕风险\n• 花费：60元',
+                '螺旋桨': '螺旋桨推进是最常见的动力方式：\n• 优点：经济实用（40元）\n• 缺点：浅水易缠绕水草\n• 适合：宽阔江面、运河',
+                '电动': '电动推进特点：\n• 优点：安静环保，适合城市运河\n• 花费：50元\n• 适合：对噪音敏感的水域',
+                '人力': '人力划桨是最经济的动力：\n• 花费：仅10元\n• 缺点：动力不足，不适合急流\n• 适合：平静水域',
+                '风帆': '风帆动力特点：\n• 花费：35元\n• 优点：无需燃料，环保\n• 缺点：依赖风力，不适合狭窄水域\n• 适合：宽阔江面',
+                '核动力': '核动力推进是最高端配置：\n• 花费：100元\n• 动力强大持久\n• 但在大多数场景下过于昂贵\n• 通常超预算',
+                '铝合金': '铝合金船体特点：\n• 花费：60元\n• 坚固耐用，重量适中\n• 适合激流、河口环境\n• 是高端配置的首选',
+                '柚木': '柚木船体特点：\n• 花费：50元\n• 美观耐用，有天然防腐性\n• 适合多种环境\n• 性价比较高',
+                '钢铁': '钢铁船体特点：\n• 花费：45元\n• 坚固但重量大\n• 需要防腐涂层\n• 适合宽阔江面',
+                '木质': '木质船体特点：\n• 花费：30元\n• 经济实惠\n• 不耐腐蚀，不适合河口\n• 适合运河、湿地',
+                '塑料': '塑料船体特点：\n• 花费：20元\n• 轻便便宜\n• 强度较低\n• 适合湿地浅滩',
+                '评分': '评分标准：\n• ⭐⭐⭐⭐⭐ 优秀（90-100分）\n• ⭐⭐⭐⭐ 良好（80-89分）\n• ⭐⭐⭐ 合格（70-79分）\n• ⭐⭐ 需改进（60-69分）\n• ⭐ 不合格（<60分）\n\n基础分80分，根据场景适配性加减分。',
+                'help': '我可以帮你解答：\n• 各种船型特点（深V、平底、尖削等）\n• 5种河流环境的设计建议\n• 材料和动力的选择\n• 预算分配方案\n• 货物配置建议\n• 评分标准解释\n\n请问你想了解什么？',
+                '你好': '你好！我是AI船舶分析师。我可以帮你解答船舶设计相关的问题，包括船型选择、材料对比、动力系统、场景适配等。输入"help"查看我能回答的问题类型。',
+                '默认': '这是一个很好的问题！船舶设计需要考虑材料、船型、动力和环境的匹配。\n\n我可以帮你解答：\n• 各种船型特点\n• 河流环境适配\n• 材料和动力选择\n• 预算分配\n\n请输入具体问题，我会详细解答。'
+            };
+
+            // 查找匹配的回复
+            for (const [key, value] of Object.entries(replies)) {
+                if (message.includes(key)) {
+                    return value;
+                }
+            }
+            
+            return replies['默认'];
+        }
+
+        function renderChatMessages() {
+            const container = document.getElementById('chatContainer');
+            if (chatMessages.length === 0) {
+                container.innerHTML = `
+                    <div style="text-align: center; padding: 40px 0; color: #9ca3af;">
+                        <div style="font-size: 48px; margin-bottom: 10px;">🚢</div>
+                        <p>你好！我是AI船舶分析师</p>
+                        <p style="font-size: 12px; margin-top: 5px;">有什么船舶设计问题都可以问我~</p>
+                    </div>
+                `;
+                return;
+            }
+            container.innerHTML = chatMessages.map(msg => `
+                <div class="chat-message ${msg.role}">
+                    <div class="bubble">${msg.content.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+
+        // 页面加载时初始化
+        init();
+    </script>
+</body>
+</html>
