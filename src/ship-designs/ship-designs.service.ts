@@ -378,37 +378,4 @@ export class ShipDesignsService {
       data: { reply: response.content },
     };
   }
-
-  /**
-   * 测试 AI 功能
-   */
-  async testAI(): Promise<string> {
-    const apiKey = this.getWorkloadIdentityApiKey();
-    console.log('=== Test AI ===');
-    console.log('API Key found:', apiKey ? `YES (len=${apiKey.length})` : 'NO');
-    console.log('API Key first 20 chars:', apiKey ? apiKey.substring(0, 20) : 'N/A');
-    
-    if (!apiKey) {
-      throw new Error('API Key not found in environment variables');
-    }
-    
-    // 设置环境变量
-    process.env.COZE_WORKLOAD_IDENTITY_API_KEY = apiKey;
-    
-    // 测试 LLM 调用
-    const client = this.getLLMClient();
-    
-    try {
-      const response = await client.invoke(
-        [{ role: 'user', content: 'Say "test ok" in exactly these words' }],
-        { model: 'doubao-seed-1-6-vision-250815', temperature: 0.1 }
-      );
-      
-      console.log('LLM Response:', JSON.stringify(response));
-      return response.content || 'Empty response';
-    } catch (error) {
-      console.error('LLM Error:', error);
-      throw error;
-    }
-  }
 }

@@ -17,61 +17,16 @@ export class ShipDesignsController {
       }
     });
 
-    // 检查 API Key 的正确性
-    let apiKeyStatus = 'NOT SET';
-    let apiKeyFound = '';
-    for (const envKey of Object.keys(process.env)) {
-      if (envKey.includes('COZE_WORKLOAD_IDENTITY_API_KEY')) {
-        const value = process.env[envKey] || '';
-        const trimmed = value.trim();
-        apiKeyFound = `Found in "${envKey}" (len=${envKey.length}), value starts with "${value.substring(0, 10)}", trimmed starts with "${trimmed.substring(0, 10)}"`;
-        apiKeyStatus = trimmed ? `SET (len=${trimmed.length})` : 'EMPTY after trim';
-        break;
-      }
-    }
-
     return {
-      // 核心变量
       COZE_WORKLOAD_IDENTITY_API_KEY: process.env.COZE_WORKLOAD_IDENTITY_API_KEY 
         ? `SET (len=${process.env.COZE_WORKLOAD_IDENTITY_API_KEY.length})` 
         : 'NOT SET',
       COZE_SUPABASE_URL: process.env.COZE_SUPABASE_URL || 'NOT SET',
-      COZE_SUPABASE_ANON_KEY: process.env.COZE_SUPABASE_ANON_KEY 
-        ? `SET (len=${process.env.COZE_SUPABASE_ANON_KEY.length})` 
-        : 'NOT SET',
-      
-      // API Key 详细状态
-      api_key_status: apiKeyStatus,
-      api_key_found: apiKeyFound || 'NOT FOUND IN ANY ENV VAR',
-      
-      // 所有 COZE 环境变量
+      COZE_INTEGRATION_BASE_URL: process.env.COZE_INTEGRATION_BASE_URL || 'NOT SET',
+      COZE_INTEGRATION_MODEL_BASE_URL: process.env.COZE_INTEGRATION_MODEL_BASE_URL || 'NOT SET',
       all_coze_vars: allEnvVars,
-      
-      // 部署时间
       deploy_time: new Date().toISOString(),
     };
-  }
-
-  @Get('test-ai')
-  async testAI() {
-    try {
-      const result = await this.shipDesignsService.testAI();
-      
-      // 在调用 service 后读取环境变量（service 会设置正确的值）
-      const envInfo = {
-        COZE_WORKLOAD_IDENTITY_API_KEY: process.env.COZE_WORKLOAD_IDENTITY_API_KEY ? `SET (len=${process.env.COZE_WORKLOAD_IDENTITY_API_KEY.length})` : 'NOT SET',
-        COZE_INTEGRATION_BASE_URL: process.env.COZE_INTEGRATION_BASE_URL,
-        COZE_INTEGRATION_MODEL_BASE_URL: process.env.COZE_INTEGRATION_MODEL_BASE_URL,
-      };
-      
-      return { success: true, result, env: envInfo };
-    } catch (error) {
-      return { 
-        success: false, 
-        error: error.message,
-        stack: error.stack?.split('\n').slice(0, 3)
-      };
-    }
   }
 
   @Get()
