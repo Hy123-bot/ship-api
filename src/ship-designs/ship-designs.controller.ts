@@ -6,6 +6,17 @@ import { ShipDesignsService } from './ship-designs.service';
 export class ShipDesignsController {
   constructor(private readonly shipDesignsService: ShipDesignsService) {}
 
+  @Get('debug-env')
+  async debugEnv() {
+    return {
+      COZE_WORKLOAD_IDENTITY_API_KEY: process.env.COZE_WORKLOAD_IDENTITY_API_KEY ? 'SET (len=' + process.env.COZE_WORKLOAD_IDENTITY_API_KEY.length + ')' : 'NOT SET',
+      COZE_INTEGRATION_BASE_URL: process.env.COZE_INTEGRATION_BASE_URL || 'NOT SET',
+      COZE_INTEGRATION_MODEL_BASE_URL: process.env.COZE_INTEGRATION_MODEL_BASE_URL || 'NOT SET',
+      COZE_BUCKET_ENDPOINT_URL: process.env.COZE_BUCKET_ENDPOINT_URL || 'NOT SET',
+      COZE_BUCKET_NAME: process.env.COZE_BUCKET_NAME || 'NOT SET',
+    };
+  }
+
   @Get()
   async findAll() {
     return this.shipDesignsService.findAll();
