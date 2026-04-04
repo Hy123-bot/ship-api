@@ -17,6 +17,19 @@ export class ShipDesignsController {
       }
     });
 
+    // 检查 API Key 的正确性
+    let apiKeyStatus = 'NOT SET';
+    let apiKeyFound = '';
+    for (const envKey of Object.keys(process.env)) {
+      if (envKey.includes('COZE_WORKLOAD_IDENTITY_API_KEY')) {
+        const value = process.env[envKey] || '';
+        const trimmed = value.trim();
+        apiKeyFound = `Found in "${envKey}" (len=${envKey.length}), value starts with "${value.substring(0, 10)}", trimmed starts with "${trimmed.substring(0, 10)}"`;
+        apiKeyStatus = trimmed ? `SET (len=${trimmed.length})` : 'EMPTY after trim';
+        break;
+      }
+    }
+
     return {
       // 核心变量
       COZE_WORKLOAD_IDENTITY_API_KEY: process.env.COZE_WORKLOAD_IDENTITY_API_KEY 
@@ -27,12 +40,30 @@ export class ShipDesignsController {
         ? `SET (len=${process.env.COZE_SUPABASE_ANON_KEY.length})` 
         : 'NOT SET',
       
+      // API Key 详细状态
+      api_key_status: apiKeyStatus,
+      api_key_found: apiKeyFound || 'NOT FOUND IN ANY ENV VAR',
+      
       // 所有 COZE 环境变量
       all_coze_vars: allEnvVars,
       
       // 部署时间
       deploy_time: new Date().toISOString(),
     };
+  }
+
+  @Get('test-ai')
+  async testAI() {
+    try {
+      const result = await this.shipDesignsService.testAI();
+      return { success: true, result };
+    } catch (error) {
+      return { 
+        success: false, 
+        error: error.message,
+        stack: error.stack?.split('\n').slice(0, 3)
+      };
+    }
   }
 
   @Get()
