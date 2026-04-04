@@ -52,17 +52,41 @@
 
 1. 点击 **Variables** 标签
 2. 点击 **Raw Editor**
-3. 粘贴以下内容：
+3. **删除所有现有变量**（如果有）
+4. 粘贴以下内容：
 
 ```
 COZE_SUPABASE_URL=https://br-kind-kea-0ee194d7.supabase2.aidap-global.cn-beijing.volces.com
 COZE_SUPABASE_ANON_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjMzNTU1MjY2NjAsInJvbGUiOiJhbm9uIn0.u2Sz-NfyKFdY_y3Vvp10DqVAAlbu_xAtpfgTN2ZKjyU
 COZE_BUCKET_ENDPOINT_URL=https://integration.coze.cn/coze-coding-s3proxy/v1
 COZE_BUCKET_NAME=bucket_1775013530057
+COZE_WORKLOAD_IDENTITY_API_KEY=<你的Base64 API Key>
 ```
 
-4. 点击 **Add Variables**
-5. 等待自动重新部署
+### 🔑 关于 COZE_WORKLOAD_IDENTITY_API_KEY
+
+这个变量用于 AI 功能认证。你有两个选择：
+
+#### 选项 A：从 Coze 平台获取 Base64 API Key
+
+1. 访问 Coze 平台的工作负载身份设置页面
+2. 创建或复制 Base64 格式的 API Key
+3. 将其粘贴到环境变量中
+
+#### 选项 B：自己生成 Base64 API Key
+
+如果你有以下信息：
+- `client_id`: 工作负载身份的客户端 ID
+- `private_key`: 私钥内容
+
+可以使用以下命令生成 Base64 API Key：
+
+```bash
+# 在本地环境执行
+echo -n '{"client_id":"你的client_id","private_key":"你的私钥内容"}' | base64 -w 0
+```
+
+然后将生成的 Base64 字符串填入 `COZE_WORKLOAD_IDENTITY_API_KEY`。
 
 ---
 
@@ -78,42 +102,80 @@ COZE_BUCKET_NAME=bucket_1775013530057
 
 ---
 
-### 第七步：测试
+### 第七步：验证部署
 
-在浏览器中访问你的地址：
-```
-https://你的地址/api/health
-```
+访问以下地址验证功能：
 
-看到 `{"status":"ok"}` 就成功了！
+1. **环境变量检查**：
+   ```
+   https://你的域名/api/ship-designs/debug-env
+   ```
+   应该看到 `COZE_WORKLOAD_IDENTITY_API_KEY: SET (长度: xxx)`
 
----
-
-## 🌐 配置网页版
-
-打开 `smart.html` 文件，在 **API服务地址** 输入框填写：
-```
-https://你的Railway地址
-```
-
-然后：
-1. 分享 `smart.html` 给任何人
-2. 他们打开后 AI 功能就能正常使用！
+2. **AI 聊天测试**：
+   ```bash
+   curl -X POST "https://你的域名/api/ship-designs/chat" \
+     -H "Content-Type: application/json" \
+     -d '{"message":"你好"}'
+   ```
+   应该返回正常的 AI 回复
 
 ---
 
-## 💰 费用说明
+## ❓ 常见问题
 
-Railway 免费版：
-- 每月 500 小时执行时间
-- 足够船舶分析师应用使用
-- 不会产生费用
+### Q1: 环境变量显示 NOT SET
+
+**原因**：变量没有正确保存或部署未更新
+
+**解决**：
+1. 删除所有现有变量
+2. 使用 Raw Editor 重新粘贴
+3. 点击 "Add Variables"
+4. 等待自动重新部署（或手动触发）
+
+### Q2: AI 接口返回 500 错误
+
+**原因**：`COZE_WORKLOAD_IDENTITY_API_KEY` 格式错误或无效
+
+**解决**：
+1. 访问 `/api/ship-designs/debug-env` 检查变量状态
+2. 确认 API Key 是 Base64 格式
+3. 重新生成 API Key 并配置
+
+### Q3: 如何获取 Base64 API Key
+
+**方法一**：从 Coze 平台复制
+- 登录 Coze 平台
+- 进入工作负载身份管理
+- 复制已有的 Base64 API Key
+
+**方法二**：从私钥生成
+```bash
+# 准备 JSON 字符串（注意：私钥中的换行符需要用 \n 表示）
+JSON='{"client_id":"你的client_id","private_key":"-----BEGIN PRIVATE KEY-----\n你的私钥内容\n-----END PRIVATE KEY-----\n"}'
+
+# 生成 Base64
+echo -n "$JSON" | base64 -w 0
+```
 
 ---
 
-## ❓ 遇到问题？
+## 📞 技术支持
 
-告诉我：
-1. 在哪一步卡住了
-2. 错误信息是什么
-3. 我会帮你解决！
+如果部署过程中遇到问题，请检查：
+1. GitHub 仓库是否正确创建
+2. Railway 是否成功连接 GitHub
+3. 环境变量是否正确配置
+4. 部署日志中是否有错误信息
+
+---
+
+## 🎉 部署成功后
+
+你的 API 地址将是：
+```
+https://你的域名.up.railway.app
+```
+
+小程序可以通过这个地址调用所有 AI 功能！

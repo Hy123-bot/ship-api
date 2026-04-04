@@ -8,12 +8,30 @@ export class ShipDesignsController {
 
   @Get('debug-env')
   async debugEnv() {
+    // 显示所有 COZE 相关的环境变量
+    const allEnvVars: Record<string, string> = {};
+    Object.keys(process.env).forEach(key => {
+      if (key.startsWith('COZE_')) {
+        const value = process.env[key] || '';
+        allEnvVars[key] = value.length > 50 ? value.substring(0, 50) + '...' : value;
+      }
+    });
+
     return {
-      COZE_WORKLOAD_IDENTITY_API_KEY: process.env.COZE_WORKLOAD_IDENTITY_API_KEY ? 'SET (len=' + process.env.COZE_WORKLOAD_IDENTITY_API_KEY.length + ')' : 'NOT SET',
-      COZE_INTEGRATION_BASE_URL: process.env.COZE_INTEGRATION_BASE_URL || 'NOT SET',
-      COZE_INTEGRATION_MODEL_BASE_URL: process.env.COZE_INTEGRATION_MODEL_BASE_URL || 'NOT SET',
-      COZE_BUCKET_ENDPOINT_URL: process.env.COZE_BUCKET_ENDPOINT_URL || 'NOT SET',
-      COZE_BUCKET_NAME: process.env.COZE_BUCKET_NAME || 'NOT SET',
+      // 核心变量
+      COZE_WORKLOAD_IDENTITY_API_KEY: process.env.COZE_WORKLOAD_IDENTITY_API_KEY 
+        ? `SET (len=${process.env.COZE_WORKLOAD_IDENTITY_API_KEY.length})` 
+        : 'NOT SET',
+      COZE_SUPABASE_URL: process.env.COZE_SUPABASE_URL || 'NOT SET',
+      COZE_SUPABASE_ANON_KEY: process.env.COZE_SUPABASE_ANON_KEY 
+        ? `SET (len=${process.env.COZE_SUPABASE_ANON_KEY.length})` 
+        : 'NOT SET',
+      
+      // 所有 COZE 环境变量
+      all_coze_vars: allEnvVars,
+      
+      // 部署时间
+      deploy_time: new Date().toISOString(),
     };
   }
 
