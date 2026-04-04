@@ -36,6 +36,33 @@ export class ShipDesignsService {
   private storage: S3Storage | null = null;
   private llmClient: LLMClient | null = null;
 
+  /**
+   * 获取工作负载身份 API Key
+   * 兼容 Railway 变量名可能带有制表符的情况
+   */
+  private getWorkloadIdentityApiKey(): string {
+    // 首先尝试正确的变量名
+    let key = process.env.COZE_WORKLOAD_IDENTITY_API_KEY;
+    
+    // 如果没有找到，尝试查找带有制表符的变量名
+    if (!key) {
+      for (const envKey of Object.keys(process.env)) {
+        if (envKey.includes('COZE_WORKLOAD_IDENTITY_API_KEY')) {
+          key = process.env[envKey];
+          console.log(`Found API key with variable name: "${envKey}" (length: ${envKey.length})`);
+          break;
+        }
+      }
+    }
+    
+    // 去除值前后的空白字符
+    if (key) {
+      key = key.trim();
+    }
+    
+    return key || '';
+  }
+
   private getStorage(): S3Storage {
     if (!this.storage) {
       this.storage = new S3Storage({
@@ -51,6 +78,14 @@ export class ShipDesignsService {
 
   private getLLMClient(): LLMClient {
     if (!this.llmClient) {
+      const apiKey = this.getWorkloadIdentityApiKey();
+      console.log('API Key found:', apiKey ? `YES (length: ${apiKey.length})` : 'NO');
+      
+      // 设置环境变量供 SDK 使用
+      if (apiKey) {
+        process.env.COZE_WORKLOAD_IDENTITY_API_KEY = apiKey;
+      }
+      
       this.llmClient = new LLMClient(new Config());
     }
     return this.llmClient;
