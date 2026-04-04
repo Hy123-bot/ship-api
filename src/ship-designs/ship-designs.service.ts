@@ -1,6 +1,7 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import { Injectable } from '@nestjs/common';
 import { getSupabaseClient } from '@/storage/database/supabase-client';
-import { S3Storage, LLMClient, Config } from 'coze-coding-dev-sdk';
+import { S3Storage } from 'coze-coding-dev-sdk';
+import { LLMClient, Config } from 'coze-coding-dev-sdk';
 
 export interface ShipDesign {
   id: number;
@@ -86,61 +87,28 @@ export class ShipDesignsService {
         process.env.COZE_WORKLOAD_IDENTITY_API_KEY = apiKey;
       }
       
-      // 设置正确的 API 端点（Railway 环境变量可能配置错误）
-      // 注意：正确的端点是 integration.coze.cn，不是 api.coze.cn
-      if (!process.env.COZE_INTEGRATION_BASE_URL || 
-          process.env.COZE_INTEGRATION_BASE_URL === 'https://api.coze.com' ||
-          process.env.COZE_INTEGRATION_BASE_URL === 'https://api.coze.cn') {
-        process.env.COZE_INTEGRATION_BASE_URL = 'https://integration.coze.cn';
-      }
-      if (!process.env.COZE_INTEGRATION_MODEL_BASE_URL || 
-          process.env.COZE_INTEGRATION_MODEL_BASE_URL === 'https://model.coze.com' ||
-          process.env.COZE_INTEGRATION_MODEL_BASE_URL === 'https://api.coze.cn/api/v3') {
-        process.env.COZE_INTEGRATION_MODEL_BASE_URL = 'https://integration.coze.cn/api/v3';
-      }
-      
-      console.log('COZE_INTEGRATION_BASE_URL:', process.env.COZE_INTEGRATION_BASE_URL);
-      console.log('COZE_INTEGRATION_MODEL_BASE_URL:', process.env.COZE_INTEGRATION_MODEL_BASE_URL);
-      
       this.llmClient = new LLMClient(new Config());
     }
     return this.llmClient;
   }
 
   async findAll(): Promise<{ code: number; msg: string; data: ShipDesign[] }> {
-    try {
-      // 调试：检查环境变量
-      console.log('=== Debug: Environment Variables ===');
-      console.log('COZE_SUPABASE_URL:', process.env.COZE_SUPABASE_URL || 'NOT SET');
-      console.log('COZE_SUPABASE_ANON_KEY (first 20 chars):', process.env.COZE_SUPABASE_ANON_KEY?.substring(0, 20) || 'NOT SET');
-      console.log('OPENAI_API_KEY (first 10 chars):', process.env.OPENAI_API_KEY?.substring(0, 10) || 'NOT SET');
-      
-      const client = getSupabaseClient();
-      console.log('Supabase client created successfully');
+    const client = getSupabaseClient();
 
-      const { data, error } = await client
-        .from('ship_designs')
-        .select('*')
-        .order('created_at', { ascending: false });
+    const { data, error } = await client
+      .from('ship_designs')
+      .select('*')
+      .order('created_at', { ascending: false });
 
-      if (error) {
-        console.error('Supabase query error:', error);
-        throw new Error(`查询失败: ${error.message}`);
-      }
-
-      console.log('Query successful, returned', data?.length, 'records');
-
-      return {
-        code: 200,
-        msg: 'success',
-        data: data as ShipDesign[],
-      };
-    } catch (err) {
-      console.error('=== findAll Error ===');
-      console.error('Error message:', err.message);
-      console.error('Error stack:', err.stack);
-      throw err;
+    if (error) {
+      throw new Error(`查询失败: ${error.message}`);
     }
+
+    return {
+      code: 200,
+      msg: 'success',
+      data: data as ShipDesign[],
+    };
   }
 
   async upsert(createDto: {
@@ -236,18 +204,13 @@ export class ShipDesignsService {
       throw new Error('无法读取文件内容');
     }
 
-    // 上传图片到对象存储
-    const fileKey = await this.getStorage().uploadFile({
-      fileContent: fileBuffer,
-      fileName: `ship-images/${Date.now()}_${file.originalname || 'image.jpg'}`,
-      contentType: file.mimetype || 'image/jpeg',
-    });
+    // 将图片转换为 base64 格式
+    const base64Image = fileBuffer.toString('base64');
+    const mimeType = file.mimetype || 'image/jpeg';
+    const imageUrl = `data:${mimeType};base64,${base64Image}`;
 
-    // 生成签名 URL
-    const imageUrl = await this.getStorage().generatePresignedUrl({
-      key: fileKey,
-      expireTime: 3600,
-    });
+    console.log('图片大小:', fileBuffer.length, 'bytes');
+    console.log('Base64 长度:', base64Image.length);
 
     // 调用 LLM Vision 模型识别图片
     const prompt = `你是一个船舶设计专家。请仔细分析这张船舶设计图片，识别并提取以下信息：
