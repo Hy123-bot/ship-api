@@ -3,7 +3,7 @@
 FROM node:20-alpine AS builder
 
 # 添加 ARG 来破坏缓存
-ARG CACHE_BUST=2026-04-04-v6
+ARG CACHE_BUST=2026-04-04-v7
 RUN echo "Cache bust: $CACHE_BUST"
 
 WORKDIR /app
