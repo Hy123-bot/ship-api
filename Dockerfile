@@ -1,10 +1,5 @@
 # 构建阶段 - 使用更轻量的镜像
-# v4: 监听 0.0.0.0 接受外部请求
 FROM node:20-alpine AS builder
-
-# 添加 ARG 来破坏缓存
-ARG CACHE_BUST=2026-04-04-v7
-RUN echo "Cache bust: $CACHE_BUST"
 
 WORKDIR /app
 
@@ -17,8 +12,9 @@ RUN npm ci --no-audit --no-fund --prefer-offline
 # 复制源代码和配置文件
 COPY . .
 
-# 编译 TypeScript
-RUN npm run build
+# 强制破坏缓存 - 在构建前添加随机层
+ARG CACHE_BUST=default
+RUN echo "Building with cache bust: $CACHE_BUST" && npm run build
 
 # 生产阶段
 FROM node:20-alpine
