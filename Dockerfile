@@ -12,9 +12,8 @@ RUN npm ci --no-audit --no-fund --prefer-offline
 # 复制源代码和配置文件
 COPY . .
 
-# 强制破坏缓存 - 在构建前添加随机层
-ARG CACHE_BUST=default
-RUN echo "Building with cache bust: $CACHE_BUST" && npm run build
+# 编译 TypeScript
+RUN npm run build
 
 # 生产阶段
 FROM node:20-alpine
