@@ -29,6 +29,9 @@ RUN npm ci --omit=dev --no-audit --no-fund --prefer-offline
 # 从构建阶段复制编译后的代码
 COPY --from=builder /app/dist ./dist
 
+# 复制 public 目录（静态网页）
+COPY --from=builder /app/public ./public
+
 # 暴露端口
 EXPOSE 3000
 
