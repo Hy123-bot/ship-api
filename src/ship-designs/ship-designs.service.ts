@@ -57,23 +57,38 @@ export class ShipDesignsService {
   }
 
   async findAll(): Promise<{ code: number; msg: string; data: ShipDesign[] }> {
-    const client = getSupabaseClient();
+    try {
+      // 调试：检查环境变量
+      console.log('=== Debug: Environment Variables ===');
+      console.log('COZE_SUPABASE_URL:', process.env.COZE_SUPABASE_URL ? 'SET' : 'NOT SET');
+      console.log('COZE_SUPABASE_ANON_KEY:', process.env.COZE_SUPABASE_ANON_KEY ? 'SET' : 'NOT SET');
+      
+      const client = getSupabaseClient();
+      console.log('Supabase client created successfully');
 
-    const { data, error } = await client
-      .from('ship_designs')
-      .select('*')
-      .order('created_at', { ascending: false });
+      const { data, error } = await client
+        .from('ship_designs')
+        .select('*')
+        .order('created_at', { ascending: false });
 
-    if (error) {
-      console.error('Supabase query error:', error);
-      throw new Error(`查询失败: ${error.message}`);
+      if (error) {
+        console.error('Supabase query error:', error);
+        throw new Error(`查询失败: ${error.message}`);
+      }
+
+      console.log('Query successful, returned', data?.length, 'records');
+
+      return {
+        code: 200,
+        msg: 'success',
+        data: data as ShipDesign[],
+      };
+    } catch (err) {
+      console.error('=== findAll Error ===');
+      console.error('Error message:', err.message);
+      console.error('Error stack:', err.stack);
+      throw err;
     }
-
-    return {
-      code: 200,
-      msg: 'success',
-      data: data as ShipDesign[],
-    };
   }
 
   async upsert(createDto: {
