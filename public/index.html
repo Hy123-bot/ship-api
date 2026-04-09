@@ -557,6 +557,11 @@
                         </div>
                     </div>
                     <div class="btn-row" style="margin-bottom: 15px;">
+                        <button class="btn btn-secondary" onclick="sortDesigns('score')">🏆 按得分排序</button>
+                        <button class="btn btn-secondary" onclick="sortDesigns('time')">⏰ 按时间排序</button>
+                    </div>
+                    <div class="btn-row" style="margin-bottom: 15px;">
+                        <button class="btn btn-teal" onclick="openDetailStatsModal()">📊 详细统计</button>
                         <button class="btn btn-secondary" onclick="exportLocalData()">📄 导出报告</button>
                         <button class="btn btn-secondary" onclick="clearLocalData()">🗑️ 清空数据</button>
                     </div>
@@ -565,6 +570,98 @@
             </div>
             <div class="modal-footer">
                 <button class="btn btn-secondary" style="width: 100%;" onclick="closeTeacherModal()">关闭</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 详细统计弹窗 -->
+    <div id="detailStatsModal" class="modal-overlay hidden">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <span>📊 详细统计</span>
+                <button class="close" onclick="closeDetailStatsModal()">×</button>
+            </div>
+            <div class="modal-body" style="max-height: 70vh; overflow-y: auto;">
+                <!-- 得分分布 -->
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="card-header">🎯 得分分布</div>
+                    <div class="card-body">
+                        <div style="display: flex; flex-direction: column; gap: 12px;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 80px; font-size: 12px; color: #666;">优秀 (≥80)</span>
+                                <div style="flex: 1; height: 24px; background: #f3f4f6; border-radius: 6px; overflow: hidden;">
+                                    <div id="excellentBar" style="height: 100%; background: #22c55e; transition: width 0.3s; width: 0%;"></div>
+                                </div>
+                                <span id="excellentCount" style="width: 50px; text-align: right; font-size: 12px;">0组</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 80px; font-size: 12px; color: #666;">合格 (60-79)</span>
+                                <div style="flex: 1; height: 24px; background: #f3f4f6; border-radius: 6px; overflow: hidden;">
+                                    <div id="passBar" style="height: 100%; background: #3b82f6; transition: width 0.3s; width: 0%;"></div>
+                                </div>
+                                <span id="passCount" style="width: 50px; text-align: right; font-size: 12px;">0组</span>
+                            </div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="width: 80px; font-size: 12px; color: #666;">待改进 (&lt;60)</span>
+                                <div style="flex: 1; height: 24px; background: #f3f4f6; border-radius: 6px; overflow: hidden;">
+                                    <div id="failBar" style="height: 100%; background: #ef4444; transition: width 0.3s; width: 0%;"></div>
+                                </div>
+                                <span id="failCount" style="width: 50px; text-align: right; font-size: 12px;">0组</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- 河段使用情况 -->
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="card-header">🌊 河段使用情况</div>
+                    <div class="card-body">
+                        <div id="riverDistribution" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    </div>
+                </div>
+
+                <!-- 材料选择分布 -->
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="card-header">🪵 材料选择分布</div>
+                    <div class="card-body">
+                        <div id="materialDistribution" style="display: flex; flex-direction: column; gap: 10px;"></div>
+                    </div>
+                </div>
+
+                <!-- 成本分析 -->
+                <div class="card" style="margin-bottom: 15px;">
+                    <div class="card-header">💰 成本分析</div>
+                    <div class="card-body">
+                        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 15px;">
+                            <div style="background: #f3f4f6; border-radius: 8px; padding: 10px; text-align: center;">
+                                <div id="costAvg" style="font-size: 18px; font-weight: bold; color: #2c9faf;">0</div>
+                                <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">平均成本(元)</div>
+                            </div>
+                            <div style="background: #f3f4f6; border-radius: 8px; padding: 10px; text-align: center;">
+                                <div id="costMin" style="font-size: 18px; font-weight: bold; color: #22c55e;">0</div>
+                                <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">最低成本(元)</div>
+                            </div>
+                            <div style="background: #f3f4f6; border-radius: 8px; padding: 10px; text-align: center;">
+                                <div id="costMax" style="font-size: 18px; font-weight: bold; color: #ef4444;">0</div>
+                                <div style="font-size: 11px; color: #9ca3af; margin-top: 2px;">最高成本(元)</div>
+                            </div>
+                        </div>
+                        <div>
+                            <div style="font-size: 12px; color: #666; margin-bottom: 8px;">预算使用情况</div>
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <span style="font-size: 12px;">0元</span>
+                                <div style="flex: 1; height: 12px; background: #f3f4f6; border-radius: 6px; overflow: hidden;">
+                                    <div id="budgetBar" style="height: 100%; background: #a855f7; transition: width 0.3s; width: 0%;"></div>
+                                </div>
+                                <span style="font-size: 12px;">200元</span>
+                            </div>
+                            <div id="budgetUsage" style="font-size: 12px; text-align: center; color: #666; margin-top: 8px;">平均预算使用率：0%</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" style="width: 100%;" onclick="closeDetailStatsModal()">关闭</button>
             </div>
         </div>
     </div>
@@ -1200,6 +1297,96 @@ ${suggestions.length ? suggestions.join('\n') : '设计合理，建议保持当�
                 renderDesignList();
                 alert('数据已清空');
             }
+        }
+
+        function sortDesigns(type) {
+            if (type === 'score') {
+                localDesigns.sort((a, b) => b.score - a.score);
+            } else if (type === 'time') {
+                localDesigns.sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+            }
+            renderDesignList();
+        }
+
+        function openDetailStatsModal() {
+            if (localDesigns.length === 0) {
+                alert('暂无设计数据，无法生成统计');
+                return;
+            }
+            updateDetailStats();
+            document.getElementById('detailStatsModal').classList.remove('hidden');
+        }
+
+        function closeDetailStatsModal() {
+            document.getElementById('detailStatsModal').classList.add('hidden');
+        }
+
+        function updateDetailStats() {
+            // 得分分布
+            const total = localDesigns.length;
+            const excellent = localDesigns.filter(d => d.score >= 80).length;
+            const pass = localDesigns.filter(d => d.score >= 60 && d.score < 80).length;
+            const fail = localDesigns.filter(d => d.score < 60).length;
+
+            document.getElementById('excellentBar').style.width = `${(excellent / total) * 100}%`;
+            document.getElementById('excellentCount').textContent = `${excellent}组`;
+            document.getElementById('passBar').style.width = `${(pass / total) * 100}%`;
+            document.getElementById('passCount').textContent = `${pass}组`;
+            document.getElementById('failBar').style.width = `${(fail / total) * 100}%`;
+            document.getElementById('failCount').textContent = `${fail}组`;
+
+            // 河段分布
+            const riverDistribution = {};
+            localDesigns.forEach(d => {
+                riverDistribution[d.river_id] = (riverDistribution[d.river_id] || 0) + 1;
+            });
+
+            const riverContainer = document.getElementById('riverDistribution');
+            riverContainer.innerHTML = Object.keys(RIVERS).map(riverId => {
+                const count = riverDistribution[riverId] || 0;
+                const percent = (count / total) * 100;
+                return `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="width: 80px; font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${RIVERS[riverId].name}</span>
+                        <div style="flex: 1; height: 20px; background: #f3f4f6; border-radius: 6px; overflow: hidden;">
+                            <div style="height: 100%; background: #2c9faf; transition: width 0.3s; width: ${percent}%;"></div>
+                        </div>
+                        <span style="width: 50px; text-align: right; font-size: 12px;">${count}组</span>
+                    </div>
+                `;
+            }).join('');
+
+            // 材料分布
+            const materialDistribution = {};
+            localDesigns.forEach(d => {
+                materialDistribution[d.material] = (materialDistribution[d.material] || 0) + 1;
+            });
+
+            const materialContainer = document.getElementById('materialDistribution');
+            materialContainer.innerHTML = Object.entries(materialDistribution).map(([material, count]) => {
+                const percent = (count / total) * 100;
+                return `
+                    <div style="display: flex; align-items: center; gap: 10px;">
+                        <span style="width: 100px; font-size: 12px; color: #666; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;">${material}</span>
+                        <div style="flex: 1; height: 20px; background: #f3f4f6; border-radius: 6px; overflow: hidden;">
+                            <div style="height: 100%; background: #f97316; transition: width 0.3s; width: ${percent}%;"></div>
+                        </div>
+                        <span style="width: 50px; text-align: right; font-size: 12px;">${count}组</span>
+                    </div>
+                `;
+            }).join('');
+
+            // 成本分析
+            const costs = localDesigns.map(d => d.total_cost);
+            const costAvg = costs.reduce((a, b) => a + b, 0) / total;
+            const costMin = Math.min(...costs);
+            const costMax = Math.max(...costs);
+
+            document.getElementById('costAvg').textContent = Math.round(costAvg);
+            document.getElementById('costMin').textContent = costMin;
+            document.getElementById('costMax').textContent = costMax;
+            document.getElementById('budgetBar').style.width = `${(costAvg / 200) * 100}%`;
+            document.getElementById('budgetUsage').textContent = `平均预算使用率：${((costAvg / 200) * 100).toFixed(1)}%`;
         }
 
         // ========== AI聊天 ==========
