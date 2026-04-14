@@ -442,7 +442,7 @@
                     <div class="river-tab" data-river="estuary">近海河口</div>
                 </div>
                 <div class="river-card">
-                    <img id="riverImg" src="https://ship-api-production-9fc7.up.railway.app/river-images/lake.jpg" alt="河流环境">
+                    <img id="riverImg" src="https://ship-api-production-9fc7.up.railway.app/river-images/lake_original.jpg" alt="河流环境">
                     <div class="info">
                         <h3 id="riverName">宽阔江面</h3>
                         <p id="riverDesc">水面宽阔，风浪较大，周边景点，远处有大桥。</p>
@@ -716,32 +716,32 @@
         let API_BASE = '';
         let isOnline = false;
         
-        // 河流数据 - 使用压缩后的图片以提升加载速度
+        // 河流数据 - 使用原始图片（已优化压缩）
         const RAILWAY_BASE = 'https://ship-api-production-9fc7.up.railway.app';
         const RIVERS = {
             mountain: {
                 name: '山间激流',
-                img: RAILWAY_BASE + '/river-images/mountain.jpg',
+                img: RAILWAY_BASE + '/river-images/mountain_original.jpg',
                 desc: '峡谷之间，水流湍急，暗礁密布，河道狭窄且落差大。'
             },
             canal: {
                 name: '城市运河',
-                img: RAILWAY_BASE + '/river-images/canal.jpg',
+                img: RAILWAY_BASE + '/river-images/canal_original.jpg',
                 desc: '城市运河，两岸景区步道，行人众多，水面平静。'
             },
             lake: {
                 name: '宽阔江面',
-                img: RAILWAY_BASE + '/river-images/lake.jpg',
+                img: RAILWAY_BASE + '/river-images/lake_original.jpg',
                 desc: '水面宽阔，风浪较大，周边景点，远处有大桥。'
             },
             wetland: {
                 name: '湿地浅滩',
-                img: RAILWAY_BASE + '/river-images/wetland.jpg',
+                img: RAILWAY_BASE + '/river-images/wetland_original.jpg',
                 desc: '芦苇丛生，候鸟栖息，水浅（<0.5m），生态敏感。'
             },
             estuary: {
                 name: '近海河口',
-                img: RAILWAY_BASE + '/river-images/estuary.jpg',
+                img: RAILWAY_BASE + '/river-images/estuary_original.jpg',
                 desc: '咸淡水交汇，潮汐影响大，风浪混合，腐蚀性强。'
             }
         };
